@@ -7,7 +7,6 @@
   "repository": {
     "url": "https://github.com/rmorshea/idom"
   },
-  "main": "core_modules/layout.js",
   "scripts": {
     "it": "./node_modules/.bin/npx",
     "build": "npm run it -- snowpack && npm run it -- snowpack build",

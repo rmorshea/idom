@@ -1,10 +1,14 @@
+import re
 import json
 import shutil
 import subprocess
+import tokenize
+from io import BytesIO
 from loguru import logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional, List, Union, Dict, Sequence
+from typing import Optional, List, Union, Dict, Sequence, Set
+from pkgutil import iter_modules
 
 from .utils import Spinner
 
@@ -97,6 +101,7 @@ def installed() -> List[str]:
 
 
 def install(packages: Sequence[str], exports: Sequence[str] = ()) -> None:
+    packages_from_python = _find_javascript_dependencies_from_python_modules()
     with TemporaryDirectory() as tempdir:
         tempdir_path = Path(tempdir)
         temp_static_dir = tempdir_path / "static"
@@ -106,7 +111,7 @@ def install(packages: Sequence[str], exports: Sequence[str] = ()) -> None:
         shutil.copytree(STATIC_DIR, temp_static_dir, symlinks=True)
 
         cache = Cache(temp_build_dir)
-        cache.add_packages(packages, exports)
+        cache.add_packages(packages + packages_from_python, exports)
 
         with open(temp_static_dir / "package.json") as f:
             package_json = json.load(f)
@@ -117,7 +122,7 @@ def install(packages: Sequence[str], exports: Sequence[str] = ()) -> None:
         with (temp_static_dir / "package.json").open("w+") as f:
             json.dump(package_json, f)
 
-        with Spinner(f"Installing: {', '.join(packages)}"):
+        with Spinner(f"Installing: {', '.join(packages or cache.package_list)}"):
             _run_subprocess(["npm", "install"], temp_static_dir)
             _run_subprocess(["npm", "install"] + cache.package_list, temp_static_dir)
             _run_subprocess(["npm", "run", "build"], temp_static_dir)
@@ -214,3 +219,27 @@ def _export_name_from_package(pkg: str) -> str:
     else:
         # this works even if there are no @ symbols
         return pkg.rsplit("@", 1)[0]
+
+
+_IDOM_INSTALL_COMMENT = re.compile(r"^# ?idom-install *: (.*?)\n?$")
+
+
+def _find_javascript_dependencies_from_python_modules() -> List[str]:
+    dependencies: Set[str] = set()
+    found = False
+    for mod_info in iter_modules():
+        found = mod_info.name == "testing"
+        loader = mod_info.module_finder.find_loader(mod_info.name)[0]
+        source = loader.get_source(mod_info.name)
+        if source is None:
+            continue
+        buffer = BytesIO(source.encode())
+        for token in tokenize.tokenize(buffer.readline):
+            if token.type == tokenize.NEWLINE:
+                break
+            if token.type == tokenize.COMMENT:
+                match = _IDOM_INSTALL_COMMENT.match(token.string)
+                if match is not None:
+                    dependencies.update(match.groups()[0].split())
+    assert found
+    return list(dependencies)
