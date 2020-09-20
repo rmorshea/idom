@@ -50,8 +50,9 @@ def main():
 
 
 def _print_available_options():
-    for found_example_file in examples_dir.glob("*.py"):
-        print("-", found_example_file.stem)
+    ex_names = [f.stem for f in examples_dir.glob("*.py")]
+    for name in sorted(ex_names):
+        print("-", name)
 
 
 if __name__ == "__main__":

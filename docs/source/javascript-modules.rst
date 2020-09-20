@@ -58,21 +58,6 @@ Once the package has been succesfully installed, you can import and display the 
 .. example:: material_ui_button_no_action
 
 
-.. note::
-
-    Styling for Material UI is already built into this page so in the following examples
-    we've omitted a link to the style sheet which would otherwise be created with:
-
-    .. code-block::
-
-        material_ui_style = idom.html.link(
-            {
-                "rel": "stylesheet",
-                "href": "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap",
-            }
-        )
-
-
 Passing Props To Components
 ---------------------------
 
@@ -89,22 +74,13 @@ Defining Your Own Modules
 
 While it's probably best to create
 `a real package <https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry>`__
-for your Javascript, if you're just experimenting it might be easiest to quickly
+for your Javascript, if you're just experimenting, it might be easiest to quickly
 hook in a module of your own making on the fly. As before, we'll be using a
-:class:`~idom.widgets.utils.Module`, however this time we'll pass it a ``source``
-parameter which is a file-like object. In the following example we'll use Victory again,
-but this time we'll add a callback to it. Unfortunately we can't just pass it in
-:ref:`like we did before <Passing Props To Components>` because Victory's event API
-is a bit more complex so we've implemented a quick wrapper for it in a file ``chart.js``.
+:class:`~idom.client.module.Module`, however this time we'll pass it a
+:class:`~pathlib.Path` to a ``source_file``. This will serve the contents of that file
+as if it were a module built into the application:
 
-.. literalinclude:: examples/custom_chart.js
-    :language: javascript
-
-Which we can read in as a ``source`` to :class:`~idom.widgets.utils.Module`:
-
-Click the bars to trigger an event 👇
-
-.. example:: custom_chart
+.. example:: material_ui_dataframe_table
 
 
 Alternate Client Implementations
