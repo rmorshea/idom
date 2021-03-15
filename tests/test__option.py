@@ -36,7 +36,7 @@ def test_option_validator():
 
 
 def test_immutable_option():
-    opt = Option("A_FAKE_OPTION", "default-value", immutable=True)
+    opt = Option("A_FAKE_OPTION", "default-value", mutable=False)
     with pytest.raises(TypeError, match="cannot be modified after initial load"):
         opt.set("a-new-value")
 
